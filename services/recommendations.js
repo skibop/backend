@@ -25,56 +25,53 @@ async function generateRecommendations(userId) {
       return [];
     }
 
-    // Group transactions by category and calculate total spent
+    const income = user.income || 0;
+    const baseSavingsMultiplier = 0.2; // Default savings multiplier for moderate income
+    let savingsMultiplier;
+
+    // Adjust the multiplier based on income (lower income = more aggressive savings suggestions)
+    if (income <= 200) {
+      savingsMultiplier = 0.4; // Aggressive savings for users with low income
+    } else if (income <= 500) {
+      savingsMultiplier = 0.3; // Moderate savings for mid-level income
+    } else {
+      savingsMultiplier = baseSavingsMultiplier; // Less aggressive for higher income
+    }
+
+    // Calculate potential savings for each category
     const categoryTotals = transactions.reduce((acc, t) => {
       acc[t.category] = (acc[t.category] || 0) + t.amount;
       return acc;
     }, {});
 
-    // Determine the income bracket
-    const annualIncome = user.income || 0;
-    let savingsMultiplier;
-    if (annualIncome < 200) {
-      savingsMultiplier = 0.3; // Aggressive savings suggestions for low income
-    } else if (annualIncome < 500) {
-      savingsMultiplier = 0.2; // Moderate for mid-level income
-    } else {
-      savingsMultiplier = 0.1; // Less aggressive for higher income
-    }
-
-    // Filter out categories with less than $5 total spent
+    // Filter and sort categories based on total spending, set higher minimum threshold
     const filteredCategories = Object.entries(categoryTotals)
-      .filter(([, amount]) => amount > 30)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
+      .filter(([category, amount]) => amount > 25)  // Set a higher minimum threshold (e.g., $50)
+      .sort((a, b) => b[1] - a[1]); // Sort by highest spending
 
-    console.log('Top spending categories over $30:', filteredCategories);
-
-    // Generate recommendations based on top spending categories and income
+    // Generate recommendations based on spending categories and income
     const recommendations = filteredCategories.map(([category, amount]) => {
       let tip = '';
-      let potentialSavings = 0;
+      let potentialSavings = amount * savingsMultiplier; // Apply income-based savings multiplier
 
       switch (category) {
-        case 'Entertainment':
-          tip = 'Look for free or low-cost activities, or consider sharing subscriptions.';
-          potentialSavings = amount * savingsMultiplier * 0.5; // Heavier weight for low-income
+        case 'Transportation':
+          tip = 'Look for ways to reduce transportation costs, like carpooling or using public transit.';
           break;
-        case 'Dining Out':
-          tip = 'Consider meal prepping or limiting eating out to once a week.';
-          potentialSavings = amount * savingsMultiplier * 0.4;
+        case 'Entertainment':
+          tip = 'Consider finding free or low-cost entertainment options, or limit subscription services.';
           break;
         case 'Clothing':
-          tip = 'Shop at thrift stores or during sales, focusing on versatile items.';
-          potentialSavings = amount * savingsMultiplier * 0.35;
+          tip = 'Try shopping during sales or at thrift stores to save on clothing expenses.';
           break;
         case 'Personal':
-          tip = 'Try DIY for personal care or seek affordable alternatives.';
-          potentialSavings = amount * savingsMultiplier * 0.3;
+          tip = 'Reduce personal care costs by switching to affordable alternatives or DIY solutions.';
+          break;
+        case 'Misc':
+          tip = 'Review miscellaneous expenses and cut back on non-essential items where possible.';
           break;
         default:
-          tip = `Find ways to cut back in the ${category} category.`;
-          potentialSavings = amount * savingsMultiplier * 0.25;
+          tip = `Look for ways to reduce spending in the ${category} category.`;
       }
 
       return {
