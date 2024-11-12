@@ -31,49 +31,56 @@ async function generateRecommendations(userId) {
       return acc;
     }, {});
 
-    // Filter out categories with less than $20 total spent
+    // Determine the income bracket
+    const annualIncome = user.income || 0;
+    let savingsMultiplier;
+    if (annualIncome < 200) {
+      savingsMultiplier = 0.3; // Aggressive savings suggestions for low income
+    } else if (annualIncome < 500) {
+      savingsMultiplier = 0.2; // Moderate for mid-level income
+    } else {
+      savingsMultiplier = 0.1; // Less aggressive for higher income
+    }
+
+    // Filter out categories with less than $5 total spent
     const filteredCategories = Object.entries(categoryTotals)
-      .filter(([, amount]) => amount > 20)
+      .filter(([, amount]) => amount > 30)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
 
-    console.log('Top spending categories over $20:', filteredCategories);
+    console.log('Top spending categories over $30:', filteredCategories);
 
-    // Generate recommendations based on top spending categories
+    // Generate recommendations based on top spending categories and income
     const recommendations = filteredCategories.map(([category, amount]) => {
       let tip = '';
       let potentialSavings = 0;
 
       switch (category) {
         case 'Entertainment':
-          tip = 'Look for free or low-cost entertainment options in your area, or consider sharing streaming subscriptions with friends or family.';
-          potentialSavings = amount * 0.3;
+          tip = 'Look for free or low-cost activities, or consider sharing subscriptions.';
+          potentialSavings = amount * savingsMultiplier * 0.5; // Heavier weight for low-income
+          break;
+        case 'Dining Out':
+          tip = 'Consider meal prepping or limiting eating out to once a week.';
+          potentialSavings = amount * savingsMultiplier * 0.4;
           break;
         case 'Clothing':
-          tip = 'Try shopping at thrift stores or during sales, and focus on versatile, quality pieces that last longer.';
-          potentialSavings = amount * 0.4;
+          tip = 'Shop at thrift stores or during sales, focusing on versatile items.';
+          potentialSavings = amount * savingsMultiplier * 0.35;
           break;
         case 'Personal':
-          tip = 'Look for ways to reduce personal care costs, such as DIY treatments or finding more affordable alternatives.';
-          potentialSavings = amount * 0.2;
-          break;
-        case 'Transportation':
-          tip = 'Consider carpooling, using public transit, or biking for short trips to reduce transportation costs.';
-          potentialSavings = amount * 0.25;
-          break;
-        case 'Misc':
-          tip = 'Review your miscellaneous expenses and identify any non-essential items you can cut back on.';
-          potentialSavings = amount * 0.3;
+          tip = 'Try DIY for personal care or seek affordable alternatives.';
+          potentialSavings = amount * savingsMultiplier * 0.3;
           break;
         default:
-          tip = `Look for ways to reduce your spending in the ${category} category.`;
-          potentialSavings = amount * 0.2;
+          tip = `Find ways to cut back in the ${category} category.`;
+          potentialSavings = amount * savingsMultiplier * 0.25;
       }
 
       return {
         category,
         tip,
-        potentialSavings,
+        potentialSavings: parseFloat(potentialSavings.toFixed(2)),
       };
     });
 
