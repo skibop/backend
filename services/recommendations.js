@@ -31,15 +31,16 @@ async function generateRecommendations(userId) {
       return acc;
     }, {});
 
-    // Sort categories by total amount spent
-    const sortedCategories = Object.entries(categoryTotals)
+    // Filter out categories with less than $20 total spent
+    const filteredCategories = Object.entries(categoryTotals)
+      .filter(([, amount]) => amount > 20)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
 
-    console.log('Top spending categories:', sortedCategories);
+    console.log('Top spending categories over $20:', filteredCategories);
 
     // Generate recommendations based on top spending categories
-    const recommendations = sortedCategories.map(([category, amount]) => {
+    const recommendations = filteredCategories.map(([category, amount]) => {
       let tip = '';
       let potentialSavings = 0;
 
