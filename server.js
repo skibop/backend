@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 
 // Self-ping to prevent server sleep
 const url = `https://backend-v9kl.onrender.com`; // Replace with your Render URL
-const interval = 60000; // 1 minute interval
+const interval = 300000; // 1 minute interval
 
 function reloadWebsite() {
   https.get(url, (res) => {
