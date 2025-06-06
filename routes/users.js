@@ -216,14 +216,32 @@ router.get('/budgets', auth, async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
     
-    // Convert Map to object for easier frontend handling
-    const budgets = user.budgets ? Object.fromEntries(user.budgets) : {
-      Food: 300,
-      Transportation: 200,
-      Entertainment: 150,
-      Clothing: 100,
-      Personal: 100,
-      Misc: 50
+    // Convert Maps to objects for easier frontend handling
+    const budgets = {
+      monthly: user.budgets?.monthly ? Object.fromEntries(user.budgets.monthly) : {
+        Food: 300,
+        Transportation: 200,
+        Entertainment: 150,
+        Clothing: 100,
+        Personal: 100,
+        Misc: 50
+      },
+      weekly: user.budgets?.weekly ? Object.fromEntries(user.budgets.weekly) : {
+        Food: 75,
+        Transportation: 50,
+        Entertainment: 40,
+        Clothing: 25,
+        Personal: 25,
+        Misc: 15
+      },
+      yearly: user.budgets?.yearly ? Object.fromEntries(user.budgets.yearly) : {
+        Food: 3600,
+        Transportation: 2400,
+        Entertainment: 1800,
+        Clothing: 1200,
+        Personal: 1200,
+        Misc: 600
+      }
     };
     
     res.json({ budgets });
@@ -238,18 +256,34 @@ router.get('/budgets', auth, async (req, res) => {
 // @access  Private
 router.put('/budgets', auth, async (req, res) => {
   try {
-    const { budgets } = req.body;
+    const { budgets, period } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
     
-    // Update budgets
-    user.budgets = new Map(Object.entries(budgets));
+    // Initialize budgets if they don't exist
+    if (!user.budgets) {
+      user.budgets = {
+        monthly: new Map(),
+        weekly: new Map(),
+        yearly: new Map()
+      };
+    }
+    
+    // Update only the specified period
+    user.budgets[period] = new Map(Object.entries(budgets));
     await user.save();
     
-    res.json({ budgets: Object.fromEntries(user.budgets) });
+    // Return all budgets
+    const allBudgets = {
+      monthly: Object.fromEntries(user.budgets.monthly),
+      weekly: Object.fromEntries(user.budgets.weekly),
+      yearly: Object.fromEntries(user.budgets.yearly)
+    };
+    
+    res.json({ budgets: allBudgets });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
