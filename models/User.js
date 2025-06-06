@@ -33,7 +33,19 @@ const UserSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  budgets: {
+    type: Map,
+    of: Number,
+    default: new Map([
+      ['Food', 300],
+      ['Transportation', 200],
+      ['Entertainment', 150],
+      ['Clothing', 100],
+      ['Personal', 100],
+      ['Misc', 50]
+    ])
+  }
 });
 
 module.exports = mongoose.model('User', UserSchema);
