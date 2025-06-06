@@ -206,4 +206,83 @@ router.get('/recommendations', auth, async (req, res) => {
   }
 });
 
+// @route   GET api/users/budgets
+// @desc    Get user's budgets
+// @access  Private
+router.get('/budgets', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    
+    // Convert Map to object for easier frontend handling
+    const budgets = user.budgets ? Object.fromEntries(user.budgets) : {
+      Food: 300,
+      Transportation: 200,
+      Entertainment: 150,
+      Clothing: 100,
+      Personal: 100,
+      Misc: 50
+    };
+    
+    res.json({ budgets });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   PUT api/users/budgets
+// @desc    Update user's budgets
+// @access  Private
+router.put('/budgets', auth, async (req, res) => {
+  try {
+    const { budgets } = req.body;
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    
+    // Update budgets
+    user.budgets = new Map(Object.entries(budgets));
+    await user.save();
+    
+    res.json({ budgets: Object.fromEntries(user.budgets) });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE api/users/budgets/reset
+// @desc    Reset budgets to defaults
+// @access  Private
+router.delete('/budgets/reset', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    
+    // Reset to default budgets
+    user.budgets = new Map([
+      ['Food', 300],
+      ['Transportation', 200],
+      ['Entertainment', 150],
+      ['Clothing', 100],
+      ['Personal', 100],
+      ['Misc', 50]
+    ]);
+    await user.save();
+    
+    res.json({ msg: 'Budgets reset to defaults', budgets: Object.fromEntries(user.budgets) });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+
 module.exports = router;
