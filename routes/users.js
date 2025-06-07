@@ -30,15 +30,18 @@ const validateRegisterInput = (req, res, next) => {
 // @access  Public
 router.post('/register', validateRegisterInput, async (req, res) => {
   const { email, password } = req.body;
+  
+  // Convert email to lowercase for consistency
+  const normalizedEmail = email.toLowerCase();
 
   try {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: normalizedEmail });
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
     user = new User({
-      email,
+      email: normalizedEmail,
       password
     });
 
@@ -73,9 +76,12 @@ router.post('/register', validateRegisterInput, async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  
+  // Convert email to lowercase for consistency
+  const normalizedEmail = email.toLowerCase();
 
   try {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ msg: 'Invalid Credentials' });
     }
