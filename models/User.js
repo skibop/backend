@@ -34,42 +34,32 @@ const UserSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  budgets: {
-  monthly: {
-    type: Map,
-    of: Number,
-    default: new Map([
-      ['Food', 300],
-      ['Transportation', 200],
-      ['Entertainment', 150],
-      ['Clothing', 100],
-      ['Personal', 100],
-      ['Misc', 50]
-    ])
-  },
-  weekly: {
-    type: Map,
-    of: Number,
-    default: new Map([
-      ['Food', 75],
-      ['Transportation', 50],
-      ['Entertainment', 40],
-      ['Clothing', 25],
-      ['Personal', 25],
-      ['Misc', 15]
-    ])
-  },
-  yearly: {
-    type: Map,
-    of: Number,
-    default: new Map([
-      ['Food', 3600],
-      ['Transportation', 2400],
-      ['Entertainment', 1800],
-      ['Clothing', 1200],
-      ['Personal', 1200],
-      ['Misc', 600]
-    ])
+budgets: {
+  type: Map,
+  of: Number,
+  default: new Map([
+    ['Food', 300],
+    ['Transportation', 200],
+    ['Entertainment', 150],
+    ['Clothing', 100],
+    ['Personal', 100],
+    ['Misc', 50]
+  ])
+},
+budgetStartDate: {
+  type: Date,
+  default: function() {
+    // Default to first day of current month
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+},
+budgetEndDate: {
+  type: Date,
+  default: function() {
+    // Default to last day of current month
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0);
   }
 }
 });
