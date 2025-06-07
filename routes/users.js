@@ -216,35 +216,21 @@ router.get('/budgets', auth, async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
     
-    // Convert Maps to objects for easier frontend handling
-    const budgets = {
-      monthly: user.budgets?.monthly ? Object.fromEntries(user.budgets.monthly) : {
-        Food: 300,
-        Transportation: 200,
-        Entertainment: 150,
-        Clothing: 100,
-        Personal: 100,
-        Misc: 50
-      },
-      weekly: user.budgets?.weekly ? Object.fromEntries(user.budgets.weekly) : {
-        Food: 75,
-        Transportation: 50,
-        Entertainment: 40,
-        Clothing: 25,
-        Personal: 25,
-        Misc: 15
-      },
-      yearly: user.budgets?.yearly ? Object.fromEntries(user.budgets.yearly) : {
-        Food: 3600,
-        Transportation: 2400,
-        Entertainment: 1800,
-        Clothing: 1200,
-        Personal: 1200,
-        Misc: 600
-      }
+    // Convert Map to object for easier frontend handling
+    const budgets = user.budgets ? Object.fromEntries(user.budgets) : {
+      Food: 300,
+      Transportation: 200,
+      Entertainment: 150,
+      Clothing: 100,
+      Personal: 100,
+      Misc: 50
     };
     
-    res.json({ budgets });
+    res.json({ 
+      budgets,
+      startDate: user.budgetStartDate,
+      endDate: user.budgetEndDate
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -256,34 +242,27 @@ router.get('/budgets', auth, async (req, res) => {
 // @access  Private
 router.put('/budgets', auth, async (req, res) => {
   try {
-    const { budgets, period } = req.body;
+    const { budgets, startDate, endDate } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
     
-    // Initialize budgets if they don't exist
-    if (!user.budgets) {
-      user.budgets = {
-        monthly: new Map(),
-        weekly: new Map(),
-        yearly: new Map()
-      };
-    }
+    // Update budgets
+    user.budgets = new Map(Object.entries(budgets));
     
-    // Update only the specified period
-    user.budgets[period] = new Map(Object.entries(budgets));
+    // Update date range if provided
+    if (startDate) user.budgetStartDate = new Date(startDate);
+    if (endDate) user.budgetEndDate = new Date(endDate);
+    
     await user.save();
     
-    // Return all budgets
-    const allBudgets = {
-      monthly: Object.fromEntries(user.budgets.monthly),
-      weekly: Object.fromEntries(user.budgets.weekly),
-      yearly: Object.fromEntries(user.budgets.yearly)
-    };
-    
-    res.json({ budgets: allBudgets });
+    res.json({ 
+      budgets: Object.fromEntries(user.budgets),
+      startDate: user.budgetStartDate,
+      endDate: user.budgetEndDate
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -300,7 +279,7 @@ router.delete('/budgets/reset', auth, async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
     
-    // Reset to default budgets
+    // Reset to default budgets and dates
     user.budgets = new Map([
       ['Food', 300],
       ['Transportation', 200],
@@ -309,9 +288,20 @@ router.delete('/budgets/reset', auth, async (req, res) => {
       ['Personal', 100],
       ['Misc', 50]
     ]);
+    
+    // Reset to current month
+    const now = new Date();
+    user.budgetStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    user.budgetEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
     await user.save();
     
-    res.json({ msg: 'Budgets reset to defaults', budgets: Object.fromEntries(user.budgets) });
+    res.json({ 
+      msg: 'Budgets reset to defaults',
+      budgets: Object.fromEntries(user.budgets),
+      startDate: user.budgetStartDate,
+      endDate: user.budgetEndDate
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
