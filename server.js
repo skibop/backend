@@ -28,14 +28,22 @@ app.get('/', (req, res) => {
 
 // Self-ping to prevent server sleep
 const url = `https://backend-v9kl.onrender.com`; // Replace with your Render URL
-const interval = 840000; // 1 minute interval
+const interval = 840000; // 14 minute interval
 
 function reloadWebsite() {
-  https.get(url, (res) => {
-    console.log(`Ping at ${new Date().toISOString()}: Status Code ${res.statusCode}`);
-  }).on('error', (error) => {
-    console.error(`Ping error at ${new Date().toISOString()}: ${error.message}`);
-  });
+  const now = new Date();
+  const hour = now.getHours();
+
+  // Only ping if the time is outside of 0:00 to 4:59
+  if (hour >= 5 || hour < 0) {
+    https.get(url, (res) => {
+      console.log(`Ping at ${now.toISOString()}: Status Code ${res.statusCode}`);
+    }).on('error', (error) => {
+      console.error(`Ping error at ${now.toISOString()}: ${error.message}`);
+    });
+  } else {
+    console.log(`Ping skipped at ${now.toISOString()}: Quiet hours`);
+  }
 }
 
 // Ping the URL every 14 minute to keep server active
