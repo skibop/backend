@@ -32,10 +32,11 @@ const interval = 840000; // 14 minute interval
 
 function reloadWebsite() {
   const now = new Date();
-  const hour = now.getHours();
+  const localTime = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const hour = localTime.getHours();
 
-  // Only ping if the time is outside of 0:00 to 4:59
-  if (hour >= 5 || hour < 0) {
+  // Skip ping from 1:00 AM to 4:59 AM
+  if (hour < 1 || hour >= 5) {
     https.get(url, (res) => {
       console.log(`Ping at ${now.toISOString()}: Status Code ${res.statusCode}`);
     }).on('error', (error) => {
