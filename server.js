@@ -31,20 +31,11 @@ const url = `https://backend-v9kl.onrender.com`; // Replace with your Render URL
 const interval = 840000; // 14 minute interval
 
 function reloadWebsite() {
-  const now = new Date();
-  const localTime = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const hour = localTime.getHours();
-
-  // Skip ping from 1:00 AM to 4:59 AM
-  if (hour < 1 || hour >= 5) {
-    https.get(url, (res) => {
-      console.log(`Ping at ${now.toISOString()}: Status Code ${res.statusCode}`);
-    }).on('error', (error) => {
-      console.error(`Ping error at ${now.toISOString()}: ${error.message}`);
-    });
-  } else {
-    console.log(`Ping skipped at ${now.toISOString()}: Quiet hours`);
-  }
+  https.get(url, (res) => {
+    console.log(`Ping at ${new Date().toISOString()}: Status Code ${res.statusCode}`);
+  }).on('error', (error) => {
+    console.error(`Ping error at ${new Date().toISOString()}: ${error.message}`);
+  });
 }
 
 // Ping the URL every 14 minute to keep server active
