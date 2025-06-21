@@ -70,6 +70,9 @@ async function generateRecommendations(userId) {
         case 'Misc':
           tip = 'Review miscellaneous expenses and cut back on non-essential items where possible.';
           break;
+        case 'Food':
+          tip = 'Try meal planning, cooking at home more often, or look for grocery store deals and coupons.';
+          break;
         default:
           tip = `Look for ways to reduce spending in the ${category} category.`;
       }
